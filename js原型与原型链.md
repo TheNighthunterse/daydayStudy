@@ -146,6 +146,20 @@ sayHi.myCall(person, 25, '杭州');
    **Q：为什么 `Object.prototype.toString.call([])` 可以检测类型，而直接 `[].toString()` 不行？**
    **A：因为 `Array.prototype` 上重写了（Override）自己的 `toString` 方法，原型链查找到 `Array.prototype` 就停止了。而通过 `.call`，我们是强行跳过了数组的原型，直接去 `Object.prototype` 上调用了那个最原始的方法**
 
+   **Q:万物皆对象，函数也是对象**
+
+   **A：既然函数也是对象，那函数就有 `__proto__`**
+
+   - `Robot.__proto__ === Function.prototype` (因为 Robot 是由 `new Function` 产生的)
+
+   - **最绕的一点：** `Function.__proto__ === Function.prototype`
+
+   - *解释：* 在 JS 的底层设计中，`Function` 既是构造函数也是自己的实例。
+
+   **Q：原型链的终点**
+
+   **A:`Object.prototype.__proto__ === null`**
+
 7. 总结
 
    - **原型**：是一个对象，它是其他对象的“模板”。
@@ -158,3 +172,45 @@ sayHi.myCall(person, 25, '杭州');
 - **误区二：`__proto__` 是标准写法。** **不完全对。** 虽然主流浏览器都支持，但它最初是私有属性。现在标准建议使用 `Object.getPrototypeOf(obj)` 来获取原型。
 - **误区三：修改 `prototype` 会影响已经创建的实例。** **对！** 因为实例只是通过指针（`__proto__`）引用了这个仓库。你往仓库里加东西，已经出生的孩子也能立马用到。
 - **函数通过 `prototype` 存东西，实例通过 `__proto__` 找东西，而 `constructor` 则是证明身份的标签。**
+
+```javascript
+function Foo() {}
+const f = new Foo();
+
+console.log(f instanceof Foo);      // true (f 的原型链上有 Foo.prototype)
+console.log(f instanceof Object);   // true (f 的原型链上也有 Object.prototype)
+console.log(Foo instanceof Function); // true (函数本身是 Function 的实例)
+```
+
+##### ES6 Class —— 原型的“语法糖”
+
+​	**ES5**
+
+```javascript
+function Animal(name) {
+    this.name = name;
+}
+Animal.prototype.eat = function() { console.log('eating...'); };
+```
+
+​	**ES6**
+
+```javascript
+class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+    eat() {
+        console.log('eating...');
+    }
+}
+```
+
+**底层逻辑依然是原型**
+
+| **维度**     | **原型（ES5）**            | **类（ES6 Class）**                  |
+| ------------ | -------------------------- | ------------------------------------ |
+| **定义方式** | 构造函数 + `prototype`     | `class` 关键字 + `constructor`       |
+| **方法位置** | 手动挂载到 `prototype`     | 直接写在类块里（本质也是 prototype） |
+| **继承实现** | 复杂的 `call` + 修改原型链 | 简单的 `extends` + `super()`         |
+| **底层核心** | **原型链**                 | **原型链（换了个壳）**               |
